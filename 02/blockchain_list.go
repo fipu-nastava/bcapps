@@ -2,27 +2,27 @@ package main
 
 import (
 	"bytes"
-	"encoding/gob"
 	"crypto/sha256"
+	"encoding/gob"
 	"fmt"
 )
 
-type NodeHash [32]byte
+type BlockHash [32]byte
 
-type Node struct {
-	MyHash NodeHash
-	PreviousHash NodeHash
-	Data string
-	previous *Node
+type Block struct {
+	MyHash       BlockHash
+	PreviousHash BlockHash
+	Data         string
+	previous     *Block
 }
 
-func (h NodeHash) String() string {
-	return fmt.Sprintf("#%x", []byte( h[:2] ))
+func (h BlockHash) String() string {
+	return fmt.Sprintf("#%x", []byte(h[:2]))
 }
 
-func (n Node) String() (retval string) {
+func (n Block) String() (retval string) {
 	pn := &n
-	format := func(pn *Node) string { return fmt.Sprintf("%s(%s)", pn.MyHash, pn.Data) }
+	format := func(pn *Block) string { return fmt.Sprintf("%s(%s)", pn.MyHash, pn.Data) }
 
 	retval += format(pn)
 
@@ -33,7 +33,7 @@ func (n Node) String() (retval string) {
 	return
 }
 
-func (n *Node) addElement(s string) (newN Node) {
+func (n *Block) addBlock(s string) (newN Block) {
 	newN.Data = s
 	newN.previous = n
 	newN.PreviousHash = n.MyHash
@@ -42,7 +42,7 @@ func (n *Node) addElement(s string) (newN Node) {
 	return
 }
 
-func (n* Node) Hash() (retval NodeHash) {
+func (n *Block) Hash() (retval BlockHash) {
 	buffer := bytes.Buffer{}
 	enc := gob.NewEncoder(&buffer)
 	err := enc.Encode(*n)
@@ -54,17 +54,16 @@ func (n* Node) Hash() (retval NodeHash) {
 }
 
 func main() {
-	a := Node{Data: "<GENESIS>"}
-	b := a.addElement("a")
-	c := b.addElement("b")
-	d := c.addElement("c")
+	a := Block{Data: "<GENESIS>"}
+	b := a.addBlock("a")
+	c := b.addBlock("b")
+	d := c.addBlock("c")
 
-	a1 := Node{Data: "<GENESIS>"}
-	b1 := a1.addElement("a")
-	c1 := b1.addElement("b")
-	d1 := c1.addElement("с")
+	a1 := Block{Data: "<GENESIS>"}
+	b1 := a1.addBlock("a")
+	c1 := b1.addBlock("b")
+	d1 := c1.addBlock("с")
 
 	fmt.Printf("Prvi blockchain: %s \n", d)
 	fmt.Printf("Drugi blockchain: %s \n", d1)
 }
-

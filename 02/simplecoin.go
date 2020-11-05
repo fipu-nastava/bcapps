@@ -1,32 +1,40 @@
 package main
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/gob"
 	"fmt"
 	"math/rand"
-	"bytes"
-	"encoding/gob"
-	"crypto/sha256"
-	"time"
 )
 
+// AddressLength - how many bytes will addresses have?
 const AddressLength = 4
 
+// Hash is 32 bytes
 type Hash [32]byte
+
+// Address is 4 bytes
 type Address [AddressLength]byte
+
+// Transaction struct will have: from, to, and amount
 type Transaction struct {
-	From Address
-	To Address
+	From   Address
+	To     Address
 	Amount int
 }
+
+// Block will have list of transactions
 type Block struct {
-	Id int
+	ID           int
 	Transactions []Transaction
-	Hash Hash
+	Hash         Hash
 	PreviousHash Hash
+	Vanity       string
 }
 
 func main() {
-	rand.Seed(time.Now().Unix())
+	rand.Seed(0) //time.Now().Unix()
 
 	bGenesis := CreateGenesisBlock()
 
@@ -34,7 +42,6 @@ func main() {
 	a2 := GenerateNewAddress()
 	a3 := GenerateNewAddress()
 
-	fmt.Printf("%+v \n", a1)
 	fmt.Printf("%+v \n", bGenesis)
 
 	// PrintMoneyTransaction(a2, 1000) // ovo mora vratiti "panic"
@@ -59,14 +66,19 @@ func main() {
 
 	b3 := CreateBlock(b2, t5, t6, t7)
 	b3.Print()
+
+	fmt.Printf("\n*\n* Final block hash is %x\n*", b3.Hash)
 }
 
+// CreateGenesisBlock creates the genesis block
 func CreateGenesisBlock() (b Block) {
+	b.Vanity = "I am the genesis!"
 	return
 }
 
-func CreateBlock(previous Block, txs... Transaction) (b Block) {
-	b.Id = previous.Id + 1
+//CreateBlock creates the block given the previous one and transactions
+func CreateBlock(previous Block, txs ...Transaction) (b Block) {
+	b.ID = previous.ID + 1
 	b.PreviousHash = previous.Hash
 	b.AddTxs(txs...)
 	hash := b.CalculateHash()
@@ -75,11 +87,13 @@ func CreateBlock(previous Block, txs... Transaction) (b Block) {
 	return
 }
 
-func (b* Block) AddTxs(transactions ...Transaction) {
+// AddTxs will add txs to existing block
+func (b *Block) AddTxs(transactions ...Transaction) {
 	b.Transactions = append(b.Transactions, transactions...)
 }
 
-func (b* Block) CalculateHash() (retval Hash) {
+// CalculateHash will get you the hash of the full block
+func (b *Block) CalculateHash() (retval Hash) {
 
 	buffer := &bytes.Buffer{}
 	enc := gob.NewEncoder(buffer)
@@ -98,12 +112,13 @@ func (h Hash) String() (a string) {
 	return
 }
 
-// Block 1 - Hash dd78... - Details: {Id:1 Transactions:[{From:[0 0 0 0] To:[1 1 1 1] Amount:10000} {From:[1 1 1 1] To:[82 253 252 7] Amount:100} {From:[82 253 252 7] To:[1 1 1 1] Amount:11}] Hash:dd78a0a3 PreviousHash:00000000}
-func (b* Block) Print() {
-	fmt.Printf("Block %d - Hash %x... - Details: ", b.Id, b.Hash[:2])
+// Print the block contents
+func (b *Block) Print() {
+	fmt.Printf("Block %d - Hash %x... - Details: ", b.ID, b.Hash[:2])
 	fmt.Printf("%+v\n", *b)
 }
 
+//PrintMoneyTransaction will put some money in the system
 func PrintMoneyTransaction(destination Address, amount int) Transaction {
 	if destination != [4]byte{1, 1, 1, 1} {
 		panic("Fraud detected! Only owner can generate money")
@@ -112,6 +127,7 @@ func PrintMoneyTransaction(destination Address, amount int) Transaction {
 	return retval
 }
 
+//GenerateNewAddress for address creation (random bytes)
 func GenerateNewAddress() (a Address) {
 	addr := make([]byte, 4)
 	rand.Read(addr)
