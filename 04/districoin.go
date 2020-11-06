@@ -2,15 +2,16 @@ package main
 
 import (
 	"flag"
-	. "bcapps/districoin"
 	"fmt"
-	"time"
 	"math/rand"
+	"time"
+
+	. "github.com/ntankovic/districoin/types"
 )
 
 func main() {
 	rand.Seed(time.Now().Unix())
-	port := flag.Int("port", 57000 + rand.Intn(1000), "Port where node should listen")
+	port := flag.Int("port", 57000+rand.Intn(1000), "Port where node should listen")
 	flag.Parse()
 
 	fmt.Printf("Bootstrap node: %d \n", *port)
@@ -27,7 +28,7 @@ func main() {
 
 	bGenesis := GetGenesisBlock()
 	b1 := CreateBlock(bGenesis, *t1) // creating a new block
-	b2 := CreateBlock(b1, *t1) // creating a new block
+	b2 := CreateBlock(b1, *t1)       // creating a new block
 
 	m1 := &BlockMessage{b1}
 	m2 := &BlockMessage{b2}
@@ -38,9 +39,9 @@ func main() {
 
 	for {
 		Broadcast(m1)
-		time.Sleep(5*time.Second)
+		time.Sleep(5 * time.Second)
 		Broadcast(m2)
-		time.Sleep(5*time.Second)
+		time.Sleep(5 * time.Second)
 	}
 }
 
@@ -53,7 +54,7 @@ func StartNode(address string, port int) {
 
 func HandleMessage(msgChannel chan Message, port int) {
 	for {
-		m := <- msgChannel
+		m := <-msgChannel
 		fmt.Printf("[node:%d] Received message from : %+v \n", port, m)
 		bm := m.(*BlockMessage)
 		fmt.Println(bm.Block.Id)
